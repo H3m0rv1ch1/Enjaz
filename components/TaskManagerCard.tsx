@@ -33,17 +33,17 @@ const TaskManagerCard: React.FC<TaskManagerCardProps> = ({ tasks, onAddTask, onD
         {/* Right Side: Task List */}
         <div className="flex-1">
             <h4 className="text-sm font-bold text-gray-500 mb-4 px-1">المهام الحالية ({tasks.length})</h4>
-            <div className="space-y-2 max-h-24 overflow-y-auto pr-2">
+            <div className="space-y-2 max-h-24 overflow-y-auto pr-2 custom-scrollbar">
                 {tasks.length > 0 ? (
                     tasks.map(task => (
-                        <div key={task.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-100 group">
-                            <p className="font-medium text-gray-800 text-sm">{task.name}</p>
+                        <div key={task.id} className="flex items-center justify-between bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-100 group">
+                            <p className="font-medium text-gray-800 text-xs">{task.name}</p>
                             <button 
                                 onClick={() => onDeleteTask(task.id)}
-                                className="p-2 bg-white text-gray-400 border border-gray-200 hover:border-red-200 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all shadow-sm active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                className="p-1.5 bg-white text-gray-400 border border-gray-200 hover:border-red-200 hover:text-red-600 hover:bg-red-50 rounded-md transition-all shadow-sm active:scale-95 opacity-0 group-hover:opacity-100 focus:opacity-100"
                                 title="حذف المهمة"
                             >
-                                <Trash2 size={16} />
+                                <Trash2 size={14} />
                             </button>
                         </div>
                     ))

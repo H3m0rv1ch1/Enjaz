@@ -1,0 +1,6 @@
+# إنجاز - نظام متابعة الأداء
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: /sitemap.xml

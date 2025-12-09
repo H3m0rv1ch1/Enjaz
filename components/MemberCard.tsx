@@ -107,7 +107,7 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, tasks, index, onUpdate,
         {/* Task List */}
         <div>
             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">المهام</h4>
-            <div className="space-y-3 max-h-28 overflow-y-auto pr-2">
+            <div className="space-y-3 max-h-28 overflow-y-auto pr-2 custom-scrollbar">
               {tasks.length > 0 ? (
                 tasks.map(task => {
                   const memberTask = member.tasks.find(mt => mt.taskId === task.id);
@@ -176,18 +176,26 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, tasks, index, onUpdate,
                     />
                 </div>
 
-                {/* Rating Input */}
-                <div className="relative group/input flex-1">
-                   <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within/input:text-emerald-600 transition-colors">
-                        <Trophy size={16} />
-                    </div>
+                {/* Rating Input - Score out of 10 */}
+                <div className="relative group/input flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus-within:border-emerald-500/50 focus-within:bg-white focus-within:shadow-[0_4px_12px_-2px_rgba(16,185,129,0.1)] transition-all">
+                    <Trophy size={16} className="text-gray-400 group-focus-within/input:text-emerald-600 transition-colors shrink-0" />
                     <input
-                        type="text"
-                        value={member.finalRating}
-                        onChange={(e) => onUpdate(member.id, 'finalRating', e.target.value)}
-                        placeholder="التقييم..."
-                        className="w-full bg-gray-50 border border-gray-200 focus:border-emerald-500/50 rounded-xl px-4 py-3 pr-11 text-sm font-bold text-gray-800 transition-all outline-none placeholder-gray-400 shadow-sm focus:bg-white focus:shadow-[0_4px_12px_-2px_rgba(16,185,129,0.1)]"
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="0.5"
+                        value={member.finalRating || ''}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '' || (parseFloat(val) >= 0 && parseFloat(val) <= 10)) {
+                                onUpdate(member.id, 'finalRating', val);
+                            }
+                        }}
+                        placeholder="0"
+                        className="w-12 bg-transparent text-center text-lg font-bold text-gray-800 outline-none placeholder-gray-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
+                    <span className="text-gray-400 font-bold text-sm">/</span>
+                    <span className="text-emerald-600 font-bold text-lg">10</span>
                 </div>
             </div>
         </div>

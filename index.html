@@ -3,9 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>إنجاز</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>إنجاز - نظام متابعة الأداء وإدارة الفريق</title>
+    <meta name="title" content="إنجاز - نظام متابعة الأداء وإدارة الفريق" />
+    <meta name="description" content="نظام متكامل لمتابعة أداء الفريق، إدارة المهام، وتقييم التفاعل بلمسة عصرية وسهلة. تابع إنجاز فريقك بكفاءة واحترافية." />
+    <meta name="keywords" content="إنجاز, إدارة الفريق, متابعة الأداء, تقييم الموظفين, إدارة المهام, تقارير الأداء" />
+    <meta name="author" content="H3m0rv1ch1" />
+    <meta name="theme-color" content="#059669" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/icon/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icon/icon.svg" />
+    <link rel="shortcut icon" href="/icon/favicon.svg" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="إنجاز - نظام متابعة الأداء وإدارة الفريق" />
+    <meta property="og:description" content="نظام متكامل لمتابعة أداء الفريق، إدارة المهام، وتقييم التفاعل بلمسة عصرية وسهلة." />
+    <meta property="og:image" content="/icon/icon.svg" />
+    <meta property="og:locale" content="ar_AR" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="إنجاز - نظام متابعة الأداء وإدارة الفريق" />
+    <meta property="twitter:description" content="نظام متكامل لمتابعة أداء الفريق، إدارة المهام، وتقييم التفاعل بلمسة عصرية وسهلة." />
+    <meta property="twitter:image" content="/icon/icon.svg" />
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="إنجاز" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,6 +57,26 @@
       /* Hide scrollbar for Chrome, Safari and Opera */
       ::-webkit-scrollbar {
         display: none;
+      }
+      
+      /* Custom minimal scrollbar for task lists */
+      .custom-scrollbar::-webkit-scrollbar {
+        display: block;
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db transparent;
       }
       
       /* Print Styles */
