@@ -147,29 +147,29 @@ npm run tauri:build
 | `npm run tauri:build` | Build complete application |
 | `npm run preview` | Preview build |
 
-## 📁 هيكل المشروع
+## 📁 Project Structure
 
 ```
 enjaz/
-├── src-tauri/              # ملفات Tauri
-│   ├── src/               # كود Rust
-│   ├── icons/             # أيقونات التطبيق
-│   └── tauri.conf.json    # إعدادات Tauri
-├── components/            # مكونات React
-│   ├── Dashboard.tsx      # لوحة التحكم الرئيسية
-│   ├── WelcomePage.tsx    # صفحة الترحيب
-│   ├── MemberCard.tsx     # بطاقة العضو
-│   ├── AddMemberForm.tsx  # نموذج إضافة عضو
-│   ├── TaskManagerCard.tsx # إدارة المهام
-│   ├── OnboardingTour.tsx # الجولة التعريفية
-│   └── PDFDocument.tsx    # مولد PDF
-├── utils/                 # أدوات مساعدة
-├── Public/               # الملفات العامة
-│   ├── icon/             # الأيقونات
-│   └── manifest.json     # إعدادات PWA
-├── types.ts              # تعريفات TypeScript
-├── constants.ts          # الثوابت
-└── App.tsx              # المكون الرئيسي
+├── src-tauri/              # Tauri files
+│   ├── src/               # Rust code
+│   ├── icons/             # Application icons
+│   └── tauri.conf.json    # Tauri configuration
+├── components/            # React components
+│   ├── Dashboard.tsx      # Main dashboard
+│   ├── WelcomePage.tsx    # Welcome page
+│   ├── MemberCard.tsx     # Member card
+│   ├── AddMemberForm.tsx  # Add member form
+│   ├── TaskManagerCard.tsx # Task management
+│   ├── OnboardingTour.tsx # Onboarding tour
+│   └── PDFDocument.tsx    # PDF generator
+├── utils/                 # Helper utilities
+├── Public/               # Public files
+│   ├── icon/             # Icons
+│   └── manifest.json     # PWA settings
+├── types.ts              # TypeScript definitions
+├── constants.ts          # Constants
+└── App.tsx              # Main component
 ```
 
 ## 🎯 How to Use
@@ -312,9 +312,9 @@ See [Contributing Guide](CONTRIBUTING.md) for complete details.
 - ✅ Make sure you're using the latest version
 - ✅ Gather system information (OS, browser, version)
 
-## 📄 الترخيص
+## 📄 License
 
-هذا المشروع مرخص تحت رخصة MIT - راجع ملف [LICENSE](LICENSE) للتفاصيل.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Developer
 
