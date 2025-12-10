@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "إنجاز",
+  "productName": "Enjaz",
   "version": "1.0.0",
-  "identifier": "com.enjaz.desktop",
+  "identifier": "com.h3m0rv1ch1.enjaz",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "إنجاز - نظام متابعة الأداء",
+        "title": "Enjaz - نظام متابعة الأداء",
         "width": 1400,
         "height": 900,
         "minWidth": 800,

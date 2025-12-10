@@ -196,7 +196,7 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ members, tasks }) => {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>تقرير إنجاز</Text>
+          <Text style={styles.headerTitle}>تقرير Enjaz</Text>
           <Text style={styles.headerSubtitle}>تقرير أداء الفريق</Text>
         </View>
 

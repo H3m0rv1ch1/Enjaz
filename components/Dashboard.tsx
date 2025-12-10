@@ -97,7 +97,7 @@ const Dashboard: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `تقرير-إنجاز-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.pdf`;
+      link.download = `تقرير-Enjaz-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -306,7 +306,7 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-center mb-4 text-emerald-800">
                 <Sparkles size={40} strokeWidth={2} />
             </div>
-            <h1 className="text-4xl font-bold mb-2 text-gray-900">تقرير تقييم الفريق</h1>
+            <h1 className="text-4xl font-bold mb-2 text-gray-900">Enjaz - تقرير تقييم الفريق</h1>
             <p className="text-gray-500 font-medium">تم الاستخراج: {new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
 
@@ -322,7 +322,7 @@ const Dashboard: React.FC = () => {
                             <Rocket size={24} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <h1 className="font-bold text-lg tracking-tight text-gray-900 leading-none group-hover:text-emerald-700 transition-colors">إنجاز</h1>
+                            <h1 className="font-bold text-lg tracking-tight text-gray-900 leading-none group-hover:text-emerald-700 transition-colors">Enjaz</h1>
                             <span className="text-sm font-medium text-gray-400 tracking-wide">نظام متابعة الأداء</span>
                         </div>
                     </div>

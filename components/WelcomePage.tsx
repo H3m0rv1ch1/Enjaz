@@ -29,7 +29,7 @@ const WelcomePage: React.FC = () => {
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight leading-tight">
-              مرحباً بك في <span className="text-emerald-400 inline-block">إنجاز</span>
+              مرحباً بك في <span className="text-emerald-400 inline-block">Enjaz</span>
             </h1>
             
             <p className="text-lg md:text-xl text-emerald-100/80 max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
@@ -121,7 +121,7 @@ const WelcomePage: React.FC = () => {
       {/* Footer */}
       <footer className="py-8 bg-gray-50 border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-            <p>© {new Date().getFullYear()} إنجاز - جميع الحقوق محفوظة</p>
+            <p>© {new Date().getFullYear()} Enjaz - جميع الحقوق محفوظة</p>
             
             <a 
                 href="https://github.com/H3m0rv1ch1?tab=repositories" 
