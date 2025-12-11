@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
     const host = process.env.TAURI_DEV_HOST;
     
     return {
+      publicDir: 'Public',
       server: {
         port: 3000,
         host: host || '0.0.0.0',
@@ -24,15 +25,15 @@ export default defineConfig(({ mode }) => {
         }
       },
       build: {
-        rollupOptions: {
-          external: (id) => {
-            // Externalize Tauri plugins for web builds
-            if (id.startsWith('@tauri-apps/plugin-')) {
-              return true;
-            }
-            return false;
-          }
-        }
+        // rollupOptions: {
+        //   external: (id) => {
+        //     // Externalize Tauri plugins for web builds
+        //     if (id.startsWith('@tauri-apps/plugin-')) {
+        //       return true;
+        //     }
+        //     return false;
+        //   }
+        // }
       }
     };
 });

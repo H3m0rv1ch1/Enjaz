@@ -96,7 +96,11 @@ const Dashboard: React.FC = () => {
     try {
       // Generate PDF blob first
       const blob = await pdf(<PDFDocument members={members} tasks={tasks} />).toBlob();
-      const fileName = `تقرير-Enjaz-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.pdf`;
+      
+      // Use standard date format for filename to avoid OS path issues
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const fileName = `Enjaz-Report-${dateStr}.pdf`;
       
       // Try to use Tauri dialog
       try {
@@ -116,10 +120,11 @@ const Dashboard: React.FC = () => {
           const arrayBuffer = await blob.arrayBuffer();
           const uint8Array = new Uint8Array(arrayBuffer);
           await writeFile(filePath, uint8Array);
-          console.log('PDF saved successfully to:', filePath);
+          alert(`تم حفظ الملف بنجاح في: ${filePath}`);
         }
       } catch (tauriError) {
-        console.warn('Tauri dialog not available, using browser download:', tauriError);
+        console.warn('Tauri dialog error:', tauriError);
+        alert(`حدث خطأ أثناء حفظ الملف: ${tauriError}`);
         // Fallback to browser download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -132,6 +137,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
+      alert('حدث خطأ غير متوقع أثناء إنشاء الملف.');
     }
 
     setIsExporting(false);
@@ -375,7 +381,10 @@ const Dashboard: React.FC = () => {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'تقرير الفريق');
 
-      const fileName = `Enjaz-Report-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.xlsx`;
+      // Use standard date format for filename
+      const date = new Date();
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const fileName = `Enjaz-Report-${dateStr}.xlsx`;
 
       // Try to use Tauri dialog first
       try {
@@ -402,10 +411,12 @@ const Dashboard: React.FC = () => {
           });
           const uint8Array = new Uint8Array(excelBuffer);
           await writeFile(filePath, uint8Array);
-          console.log('Excel file saved successfully to:', filePath);
+          alert(`تم حفظ الملف بنجاح في: ${filePath}`);
         }
       } catch (tauriError) {
-        console.warn('Tauri dialog not available, using browser download:', tauriError);
+        console.warn('Tauri dialog error:', tauriError);
+        alert(`حدث خطأ أثناء حفظ الملف: ${tauriError}`);
+        
         // Fallback to browser download with cell styles
         XLSX.writeFile(wb, fileName, { 
           cellStyles: true,
