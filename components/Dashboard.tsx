@@ -60,7 +60,6 @@ const Dashboard: React.FC = () => {
     const hasVisited = localStorage.getItem('hasVisitedApp_v1');
     if (!hasVisited) {
         setShowTour(true);
-        localStorage.setItem('hasVisitedApp_v1', 'true');
     }
   }, []);
 
@@ -85,6 +84,8 @@ const Dashboard: React.FC = () => {
 
   const handleCloseTour = () => {
       setShowTour(false);
+      // Mark that user has completed the tour
+      localStorage.setItem('hasVisitedApp_v1', 'true');
   };
 
   const handleExportPDF = async () => {
@@ -93,15 +94,42 @@ const Dashboard: React.FC = () => {
     setShowExportMenu(false);
 
     try {
+      // Generate PDF blob first
       const blob = await pdf(<PDFDocument members={members} tasks={tasks} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `تقرير-Enjaz-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const fileName = `تقرير-Enjaz-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.pdf`;
+      
+      // Try to use Tauri dialog
+      try {
+        const { save } = await import('@tauri-apps/plugin-dialog');
+        const { writeFile } = await import('@tauri-apps/plugin-fs');
+        
+        // Show save dialog
+        const filePath = await save({
+          filters: [{
+            name: 'PDF Files',
+            extensions: ['pdf']
+          }],
+          defaultPath: fileName
+        });
+        
+        if (filePath) {
+          const arrayBuffer = await blob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          await writeFile(filePath, uint8Array);
+          console.log('PDF saved successfully to:', filePath);
+        }
+      } catch (tauriError) {
+        console.warn('Tauri dialog not available, using browser download:', tauriError);
+        // Fallback to browser download
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
@@ -181,105 +209,213 @@ const Dashboard: React.FC = () => {
 
 
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (isExporting) return;
     setIsExporting(true);
     setShowExportMenu(false);
 
-    // @ts-ignore
-    const XLSX = window.XLSX;
-    if (!XLSX) {
-      console.error('XLSX library not found');
-      setIsExporting(false);
-      return;
-    }
-
-    // Cell style for centered content
-    const centerStyle = {
-      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-      font: { name: 'Arial', sz: 12 }
-    };
-
-    // Header style (centered + bold + background)
-    const headerStyle = {
-      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-      font: { name: 'Arial', sz: 12, bold: true, color: { rgb: 'FFFFFF' } },
-      fill: { fgColor: { rgb: '047857' } },
-      border: {
-        top: { style: 'thin', color: { rgb: '000000' } },
-        bottom: { style: 'thin', color: { rgb: '000000' } },
-        left: { style: 'thin', color: { rgb: '000000' } },
-        right: { style: 'thin', color: { rgb: '000000' } }
+    try {
+      // @ts-ignore
+      const XLSX = window.XLSX;
+      if (!XLSX) {
+        console.error('XLSX library not found');
+        setIsExporting(false);
+        return;
       }
-    };
 
-    // Data cell style
-    const dataStyle = {
-      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-      font: { name: 'Arial', sz: 11 },
-      border: {
-        top: { style: 'thin', color: { rgb: 'CCCCCC' } },
-        bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
-        left: { style: 'thin', color: { rgb: 'CCCCCC' } },
-        right: { style: 'thin', color: { rgb: 'CCCCCC' } }
-      }
-    };
+      // Calculate average rating like PDF
+      const avgRating = members.length > 0
+        ? (members.reduce((sum, m) => sum + (parseFloat(m.finalRating) || 0), 0) / members.length).toFixed(1)
+        : '0';
 
-    // Create headers
-    const headers = ['الاسم', 'المعرف', 'مستوى التفاعل', 'الملاحظات', 'التقييم', ...tasks.map(t => t.name)];
-    
-    // Create data rows
-    const rows = members.map(member => {
-      const taskStatuses = tasks.map(task => {
-        const memberTask = member.tasks.find(mt => mt.taskId === task.id);
-        return memberTask?.completed ? 'مكتمل' : 'غير مكتمل';
+      // Create title row (matching PDF header)
+      const titleRow = ['تقرير Enjaz - تقرير أداء الفريق'];
+      
+      // Create summary row (matching PDF summary cards)
+      const summaryRow = [`إجمالي الأعضاء: ${members.length}`, `إجمالي المهام: ${tasks.length}`, `متوسط التقييم: ${avgRating}/10`, '', ''];
+      
+      // Create date row
+      const dateRow = [`تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`];
+      
+      // Empty row for spacing
+      const emptyRow = [''];
+
+      // Create headers (matching PDF table header)
+      const headers = ['الاسم', 'المستوى', 'التقييم', 'الملاحظات', ...tasks.map(t => t.name)];
+      
+      // Create data rows
+      const rows = members.map(member => {
+        const taskStatuses = tasks.map(task => {
+          const memberTask = member.tasks.find(mt => mt.taskId === task.id);
+          return memberTask?.completed ? '✓' : '✗';
+        });
+        
+        const levelValue = member.level ? String(member.level) : '-';
+        
+        return [
+          member.name,
+          levelValue,
+          `${member.finalRating || '0'}/10`,
+          member.notes || '-',
+          ...taskStatuses
+        ];
       });
+
+      // Create worksheet from data array
+      const wsData = [titleRow, emptyRow, summaryRow, emptyRow, headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
       
-      const levelValue = member.level ? String(member.level) : 'غير محدد';
-      
-      return [
-        member.name,
-        `ID: ${member.id}`,
-        levelValue,
-        member.notes || '',
-        `${member.finalRating || '0'} / 10`,
-        ...taskStatuses
+      // Merge title cell across all columns
+      const numCols = headers.length;
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }, // Title row
+        { s: { r: 3, c: 0 }, e: { r: 3, c: numCols - 1 } }  // Date row (empty)
       ];
-    });
+      
+      // Get the range of cells
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      
+      // Apply styles to ALL cells
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cellAddress]) {
+            ws[cellAddress] = { v: '', t: 's' };
+          }
+          
+          // Title row (row 0) - Emerald green background like PDF header
+          if (R === 0) {
+            ws[cellAddress].s = {
+              alignment: { horizontal: 'center', vertical: 'center' },
+              font: { name: 'Arial', sz: 18, bold: true, color: { rgb: 'FFFFFF' } },
+              fill: { fgColor: { rgb: '047857' } }, // Emerald green
+              border: {
+                top: { style: 'medium', color: { rgb: '047857' } },
+                bottom: { style: 'medium', color: { rgb: '047857' } },
+                left: { style: 'medium', color: { rgb: '047857' } },
+                right: { style: 'medium', color: { rgb: '047857' } }
+              }
+            };
+          }
+          // Summary row (row 2) - Light green background like PDF summary cards
+          else if (R === 2) {
+            ws[cellAddress].s = {
+              alignment: { horizontal: 'center', vertical: 'center' },
+              font: { name: 'Arial', sz: 11, bold: true, color: { rgb: '047857' } },
+              fill: { fgColor: { rgb: 'D1FAE5' } }, // Light emerald
+              border: {
+                top: { style: 'thin', color: { rgb: 'D1FAE5' } },
+                bottom: { style: 'thin', color: { rgb: 'D1FAE5' } },
+                left: { style: 'thin', color: { rgb: 'D1FAE5' } },
+                right: { style: 'thin', color: { rgb: 'D1FAE5' } }
+              }
+            };
+          }
+          // Header row (row 4) - Emerald green like PDF table header
+          else if (R === 4) {
+            ws[cellAddress].s = {
+              alignment: { horizontal: 'center', vertical: 'center' },
+              font: { name: 'Arial', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
+              fill: { fgColor: { rgb: '047857' } }, // Emerald green
+              border: {
+                top: { style: 'thin', color: { rgb: '047857' } },
+                bottom: { style: 'thin', color: { rgb: '047857' } },
+                left: { style: 'thin', color: { rgb: '047857' } },
+                right: { style: 'thin', color: { rgb: '047857' } }
+              }
+            };
+          }
+          // Data rows (row 5+) - Alternating white/light gray like PDF
+          else if (R >= 5) {
+            const isEvenRow = (R - 5) % 2 === 0;
+            ws[cellAddress].s = {
+              alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+              font: { name: 'Arial', sz: 10, color: { rgb: '1F2937' } },
+              fill: { fgColor: { rgb: isEvenRow ? 'FFFFFF' : 'F9FAFB' } },
+              border: {
+                top: { style: 'thin', color: { rgb: 'E5E7EB' } },
+                bottom: { style: 'thin', color: { rgb: 'E5E7EB' } },
+                left: { style: 'thin', color: { rgb: 'E5E7EB' } },
+                right: { style: 'thin', color: { rgb: 'E5E7EB' } }
+              }
+            };
+          }
+          // Empty/spacing rows
+          else {
+            ws[cellAddress].s = {
+              alignment: { horizontal: 'center', vertical: 'center' },
+              font: { name: 'Arial', sz: 10 }
+            };
+          }
+        }
+      }
 
-    // Create worksheet
-    const ws: any = {};
-    const range = { s: { c: 0, r: 0 }, e: { c: headers.length - 1, r: rows.length } };
 
-    // Add headers with style
-    headers.forEach((header, colIndex) => {
-      const cellRef = XLSX.utils.encode_cell({ r: 0, c: colIndex });
-      ws[cellRef] = { v: header, t: 's', s: headerStyle };
-    });
 
-    // Add data rows with style
-    rows.forEach((row, rowIndex) => {
-      row.forEach((cell, colIndex) => {
-        const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: colIndex });
-        ws[cellRef] = { v: cell, t: 's', s: dataStyle };
-      });
-    });
+      // Set column widths for better appearance
+      ws['!cols'] = [
+        { wch: 25 }, // Name
+        { wch: 15 }, // Level
+        { wch: 12 }, // Rating
+        { wch: 30 }, // Notes
+        ...tasks.map(() => ({ wch: 12 })) // Tasks
+      ];
 
-    // Set range
-    ws['!ref'] = XLSX.utils.encode_range(range);
+      // Set row heights for better readability
+      ws['!rows'] = [
+        { hpt: 40 }, // Title row
+        { hpt: 10 }, // Empty row
+        { hpt: 25 }, // Summary row
+        { hpt: 10 }, // Empty row
+        { hpt: 30 }, // Header row
+        ...rows.map(() => ({ hpt: 25 })) // Data rows
+      ];
 
-    // Set column widths
-    ws['!cols'] = headers.map(() => ({ wch: 20 }));
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'تقرير الفريق');
 
-    // Set row heights
-    ws['!rows'] = [{ hpt: 30 }, ...rows.map(() => ({ hpt: 25 }))];
+      const fileName = `Enjaz-Report-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.xlsx`;
 
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'تقرير الفريق');
-
-    // Export file
-    XLSX.writeFile(wb, `Enjaz-Report-${new Date().toLocaleDateString('ar-EG').replace(/\//g, '-')}.xlsx`);
+      // Try to use Tauri dialog first
+      try {
+        const { save } = await import('@tauri-apps/plugin-dialog');
+        const { writeFile } = await import('@tauri-apps/plugin-fs');
+        
+        // Show save dialog
+        const filePath = await save({
+          filters: [{
+            name: 'Excel Files',
+            extensions: ['xlsx']
+          }],
+          defaultPath: fileName
+        });
+        
+        if (filePath) {
+          // Generate Excel file as array buffer with cell styles
+          const excelBuffer = XLSX.write(wb, { 
+            bookType: 'xlsx', 
+            type: 'array',
+            cellStyles: true,
+            bookSST: false,
+            compression: true
+          });
+          const uint8Array = new Uint8Array(excelBuffer);
+          await writeFile(filePath, uint8Array);
+          console.log('Excel file saved successfully to:', filePath);
+        }
+      } catch (tauriError) {
+        console.warn('Tauri dialog not available, using browser download:', tauriError);
+        // Fallback to browser download with cell styles
+        XLSX.writeFile(wb, fileName, { 
+          cellStyles: true,
+          bookSST: false,
+          compression: true
+        });
+      }
+    } catch (error) {
+      console.error('Error generating Excel:', error);
+    }
     
     setIsExporting(false);
   };
@@ -473,6 +609,39 @@ const Dashboard: React.FC = () => {
             {/* Mobile Add Form */}
             <div className="md:hidden no-print">
                 <AddMemberForm onAdd={handleAddMember} />
+            </div>
+
+            {/* Mobile Export Buttons */}
+            <div className="md:hidden no-print col-span-full">
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 text-center">تصدير التقرير</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button
+                            onClick={handleExportPDF}
+                            disabled={isExporting}
+                            className="flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-emerald-600 to-emerald-800 text-white py-4 px-6 rounded-xl transition-all duration-300 ease-in-out shadow-lg shadow-emerald-900/20 active:scale-95 disabled:opacity-70 disabled:cursor-wait"
+                        >
+                            {isExporting ? (
+                                <Loader2 size={24} className="animate-spin" />
+                            ) : (
+                                <FileText size={24} />
+                            )}
+                            <span className="font-bold text-sm">تصدير PDF</span>
+                        </button>
+                        <button
+                            onClick={handleExportExcel}
+                            disabled={isExporting}
+                            className="flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-emerald-600 to-emerald-800 text-white py-4 px-6 rounded-xl transition-all duration-300 ease-in-out shadow-lg shadow-emerald-900/20 active:scale-95 disabled:opacity-70 disabled:cursor-wait"
+                        >
+                            {isExporting ? (
+                                <Loader2 size={24} className="animate-spin" />
+                            ) : (
+                                <FileSpreadsheet size={24} />
+                            )}
+                            <span className="font-bold text-sm">تصدير Excel</span>
+                        </button>
+                    </div>
+                </div>
             </div>
             
             {/* Task Manager Card */}

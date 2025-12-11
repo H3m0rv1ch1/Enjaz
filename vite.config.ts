@@ -4,10 +4,14 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    const host = process.env.TAURI_DEV_HOST;
+    
     return {
       server: {
         port: 3000,
-        host: '0.0.0.0',
+        host: host || '0.0.0.0',
+        strictPort: false,
+        hmr: host ? { port: 3001 } : undefined,
       },
       plugins: [react()],
       define: {
@@ -17,6 +21,17 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+        }
+      },
+      build: {
+        rollupOptions: {
+          external: (id) => {
+            // Externalize Tauri plugins for web builds
+            if (id.startsWith('@tauri-apps/plugin-')) {
+              return true;
+            }
+            return false;
+          }
         }
       }
     };
