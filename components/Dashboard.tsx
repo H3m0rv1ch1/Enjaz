@@ -8,8 +8,10 @@ import AddMemberForm from './AddMemberForm';
 import TaskManagerCard from './TaskManagerCard';
 import OnboardingTour, { TourStep } from './OnboardingTour';
 import PDFDocument from './PDFDocument';
+import Notification, { NotificationType } from './Notification';
+import { loadAppData, saveAppData } from '../utils/storage';
 import { 
-  Users, 
+  Users,  
   Search,
   Sparkles,
   Rocket,
@@ -47,6 +49,7 @@ const Dashboard: React.FC = () => {
   const [showTour, setShowTour] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -55,13 +58,55 @@ const Dashboard: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
+  const [notification, setNotification] = useState<{
+    isVisible: boolean;
+    type: NotificationType;
+    message: string;
+  }>({
+    isVisible: false,
+    type: 'success',
+    message: '',
+  });
+
+  const showNotification = (type: NotificationType, message: string) => {
+    setNotification({
+      isVisible: true,
+      type,
+      message,
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isVisible: false }));
+  };
+
+  // Load data on mount
   useEffect(() => {
-    // Check if user has visited before to trigger tour
-    const hasVisited = localStorage.getItem('hasVisitedApp_v1');
-    if (!hasVisited) {
-        setShowTour(true);
-    }
+    const initData = async () => {
+      try {
+        const data = await loadAppData();
+        setMembers(data.members);
+        setTasks(data.tasks);
+        
+        if (!data.hasVisitedApp_v1) {
+          setShowTour(true);
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        showNotification('error', 'فشل تحميل البيانات المحفوظة');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initData();
   }, []);
+
+  const handleCloseTour = () => {
+      setShowTour(false);
+      // Mark that user has completed the tour
+      saveAppData({ hasVisitedApp_v1: true });
+  };
 
   useEffect(() => {
     if (isSearchOpen) {
@@ -81,12 +126,6 @@ const Dashboard: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleCloseTour = () => {
-      setShowTour(false);
-      // Mark that user has completed the tour
-      localStorage.setItem('hasVisitedApp_v1', 'true');
-  };
 
   const handleExportPDF = async () => {
     if (isExporting) return;
@@ -120,11 +159,11 @@ const Dashboard: React.FC = () => {
           const arrayBuffer = await blob.arrayBuffer();
           const uint8Array = new Uint8Array(arrayBuffer);
           await writeFile(filePath, uint8Array);
-          alert(`تم حفظ الملف بنجاح في: ${filePath}`);
+          showNotification('success', 'تم حفظ ملف PDF بنجاح');
         }
       } catch (tauriError) {
         console.warn('Tauri dialog error:', tauriError);
-        alert(`حدث خطأ أثناء حفظ الملف: ${tauriError}`);
+        showNotification('error', 'فشل الحفظ باستخدام نافذة النظام، سيتم التحميل عبر المتصفح');
         // Fallback to browser download
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -137,7 +176,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('حدث خطأ غير متوقع أثناء إنشاء الملف.');
+      showNotification('error', 'حدث خطأ أثناء إنشاء ملف PDF');
     }
 
     setIsExporting(false);
@@ -145,23 +184,29 @@ const Dashboard: React.FC = () => {
 
   const handleAddTask = (name: string) => {
     const newTask: Task = { id: uuidv4(), name };
-    setTasks(prevTasks => [...prevTasks, newTask]);
-    setMembers(prevMembers =>
-      prevMembers.map(member => ({
-        ...member,
-        tasks: [...member.tasks, { taskId: newTask.id, completed: false }],
-      }))
-    );
+    const newTasks = [...tasks, newTask];
+    setTasks(newTasks);
+    
+    const newMembers = members.map(member => ({
+      ...member,
+      tasks: [...member.tasks, { taskId: newTask.id, completed: false }],
+    }));
+    setMembers(newMembers);
+    
+    saveAppData({ tasks: newTasks, members: newMembers });
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    setMembers(prevMembers =>
-      prevMembers.map(member => ({
-        ...member,
-        tasks: member.tasks.filter(task => task.taskId !== taskId),
-      }))
-    );
+    const newTasks = tasks.filter(task => task.id !== taskId);
+    setTasks(newTasks);
+    
+    const newMembers = members.map(member => ({
+      ...member,
+      tasks: member.tasks.filter(task => task.taskId !== taskId),
+    }));
+    setMembers(newMembers);
+
+    saveAppData({ tasks: newTasks, members: newMembers });
   };
 
   const handleAddMember = (name: string) => {
@@ -181,36 +226,41 @@ const Dashboard: React.FC = () => {
       finalRating: '',
       tasks: tasks.map(task => ({ taskId: task.id, completed: false })),
     };
-    setMembers([...members, newMember]);
+    
+    const newMembers = [...members, newMember];
+    setMembers(newMembers);
+    saveAppData({ members: newMembers });
   };
   
   const handleToggleTask = (memberId: string, taskId: string) => {
-    setMembers(prevMembers =>
-      prevMembers.map(member =>
-        member.id === memberId
-          ? {
-              ...member,
-              tasks: member.tasks.map(task =>
-                task.taskId === taskId
-                  ? { ...task, completed: !task.completed }
-                  : task
-              ),
-            }
-          : member
-      )
+    const newMembers = members.map(member =>
+      member.id === memberId
+        ? {
+            ...member,
+            tasks: member.tasks.map(task =>
+              task.taskId === taskId
+                ? { ...task, completed: !task.completed }
+                : task
+            ),
+          }
+        : member
     );
+    setMembers(newMembers);
+    saveAppData({ members: newMembers });
   };
 
   const handleUpdateMember = (id: string, field: keyof Member, value: any) => {
-    setMembers(prevMembers =>
-      prevMembers.map(member =>
-        member.id === id ? { ...member, [field]: value } : member
-      )
+    const newMembers = members.map(member =>
+      member.id === id ? { ...member, [field]: value } : member
     );
+    setMembers(newMembers);
+    saveAppData({ members: newMembers });
   };
 
   const handleDeleteMember = (id: string) => {
-    setMembers(prevMembers => prevMembers.filter(member => member.id !== id));
+    const newMembers = members.filter(member => member.id !== id);
+    setMembers(newMembers);
+    saveAppData({ members: newMembers });
   };
 
 
@@ -411,11 +461,11 @@ const Dashboard: React.FC = () => {
           });
           const uint8Array = new Uint8Array(excelBuffer);
           await writeFile(filePath, uint8Array);
-          alert(`تم حفظ الملف بنجاح في: ${filePath}`);
+          showNotification('success', 'تم حفظ ملف Excel بنجاح');
         }
       } catch (tauriError) {
         console.warn('Tauri dialog error:', tauriError);
-        alert(`حدث خطأ أثناء حفظ الملف: ${tauriError}`);
+        showNotification('error', 'فشل الحفظ باستخدام نافذة النظام، سيتم التحميل عبر المتصفح');
         
         // Fallback to browser download with cell styles
         XLSX.writeFile(wb, fileName, { 
@@ -426,6 +476,7 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error generating Excel:', error);
+      showNotification('error', 'حدث خطأ أثناء إنشاء ملف Excel');
     }
     
     setIsExporting(false);
@@ -438,6 +489,13 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F3F4F6] text-gray-900 font-sans pt-10 flex flex-col">
       
+      <Notification
+        type={notification.type}
+        message={notification.message}
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+      />
+
       <OnboardingTour 
         steps={TOUR_STEPS}
         isOpen={showTour}

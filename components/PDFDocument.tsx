@@ -5,12 +5,12 @@ import { Member, Task } from '../types';
 // Register Almarai font
 Font.register({
   family: 'Almarai',
-  src: '/Public/Almarai-Regular.ttf',
+  src: '/Almarai-Regular.ttf',
 });
 
 Font.register({
   family: 'Almarai-Bold',
-  src: '/Public/Almarai-Bold.ttf',
+  src: '/Almarai-Bold.ttf',
 });
 
 const styles = StyleSheet.create({
