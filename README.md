@@ -1,4 +1,4 @@
-# Enjaz App - Team Performance Tracking System
+# Enjaz App - A Small Team Performance Tracking System
 
 <div align="center">
   <img src="Public/icon/icon.svg" alt="Enjaz Logo" width="128" height="128">
